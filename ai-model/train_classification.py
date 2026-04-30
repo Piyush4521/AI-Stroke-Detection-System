@@ -3,11 +3,12 @@ import cv2
 import numpy as np
 
 IMG_SIZE = 128
+BASE_DIR = os.path.dirname(__file__)
 
 train_data = []
 train_labels = []
 
-train_path = "dataset/classification/train"
+train_path = os.path.join(BASE_DIR, "dataset", "classification", "train")
 
 for category in ["Normal", "Stroke"]:
     path = os.path.join(train_path, category)
@@ -33,7 +34,7 @@ print("Train shape:", X_train.shape)
 val_data = []
 val_labels = []
 
-val_path = "dataset/classification/val"
+val_path = os.path.join(BASE_DIR, "dataset", "classification", "val")
 
 for category in ["Normal", "Stroke"]:
     path = os.path.join(val_path, category)
@@ -84,7 +85,8 @@ history = model.fit(
     validation_data=(X_val, y_val)
 )
 
-os.makedirs("models", exist_ok=True)
-model.save("models/classification_model.keras")
+models_dir = os.path.join(BASE_DIR, "models")
+os.makedirs(models_dir, exist_ok=True)
+model.save(os.path.join(models_dir, "classification_model.keras"))
 
 print("✅ Model saved successfully!")

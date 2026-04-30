@@ -1,9 +1,14 @@
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 from load_segmentation_data import images, masks
 
-model = load_model("models/segmentation_model.keras")
+BASE_DIR = os.path.dirname(__file__)
+model = load_model(
+    os.path.join(BASE_DIR, "models", "segmentation_model.keras"),
+    compile=False
+)
 
 idx = np.random.randint(0, len(images))
 

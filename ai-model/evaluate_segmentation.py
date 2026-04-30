@@ -1,8 +1,10 @@
 import numpy as np
+import os
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from load_segmentation_data import images, masks
 
+BASE_DIR = os.path.dirname(__file__)
 
 def combined_loss(y_true, y_pred):
     bce = tf.keras.losses.binary_crossentropy(y_true, y_pred)
@@ -17,7 +19,7 @@ def combined_loss(y_true, y_pred):
 
 
 model = load_model(
-    "models/segmentation_model.keras",
+    os.path.join(BASE_DIR, "models", "segmentation_model.keras"),
     custom_objects={"combined_loss": combined_loss}
 )
 

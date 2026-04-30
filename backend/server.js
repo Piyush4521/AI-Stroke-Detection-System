@@ -1,52 +1,145 @@
 const express = require("express");
-const multer = require("multer");
 const cors = require("cors");
-const { exec } = require("child_process");
-const path = require("path");
 const fs = require("fs");
+const path = require("path");
+
+require("dotenv").config({ path: path.join(__dirname, ".env") });
+
+const {
+    connectDatabase,
+    defaultMongoUri,
+    getDatabaseStatus
+} = require("./src/config/database");
+
+const {
+    ensureStorageDirectories,
+    storageRootDir
+} = require("./src/utils/storage");
+
+const {
+    pythonCommand,
+    predictionTimeoutMs
+} = require("./src/utils/inference");
+
+const authRoutes = require("./src/routes/authRoutes");
+const scanRoutes = require("./src/routes/scanRoutes");
+
+const {
+    notFoundHandler,
+    errorHandler
+} = require("./src/middleware/errorMiddleware");
 
 const app = express();
 
+const frontendDistDir = path.join(__dirname, "../frontend/dist");
+
+const PORT = Number(process.env.PORT || 5000);
+
+const maxUploadSizeMb = Number(
+    process.env.MAX_UPLOAD_SIZE_MB || 10
+);
+
+
+// =========================
+// 🔹 INITIAL SETUP
+// =========================
+ensureStorageDirectories();
+
+app.set("trust proxy", true);
+
 app.use(cors());
+
 app.use(express.json());
 
-app.use("/outputs", express.static(path.join(__dirname, "../ai-model")));
+app.use(
+    "/storage",
+    express.static(storageRootDir)
+);
 
-const upload = multer({
-    dest: "uploads/"
-});
 
+// =========================
+// 🔹 ROOT ROUTE
+// =========================
 app.get("/", (req, res) => {
-    res.send("🚀 AI Stroke Detection Backend Running");
-});
-
-app.post("/predict", upload.single("file"), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: "No file uploaded" });
-    }
-
-    const filePath = req.file.path;
-
-    exec(`python ../ai-model/predict.py ${filePath}`, (error, stdout, stderr) => {
-        fs.unlink(filePath, () => {});
-
-        if (error) {
-            console.error("Python Error:", stderr);
-            return res.status(500).json({ error: stderr });
-        }
-
-        const prediction = stdout.trim();
-
-        res.json({
-            success: true,
-            prediction: prediction,
-            mask_url: "http://localhost:5000/outputs/output_mask.png"
-        });
+    res.json({
+        message: "AI Stroke Detection Backend API",
+        frontend: fs.existsSync(frontendDistDir)
+            ? "/app"
+            : "frontend build not found"
     });
 });
 
-const PORT = 5000;
 
-app.listen(PORT, () => {
-    console.log(`🔥 Server running on http://localhost:${PORT}`);
+// =========================
+// 🔹 HEALTH ROUTE
+// =========================
+app.get("/health", (req, res) => {
+    res.json({
+        status: "ok",
+        database_status: getDatabaseStatus(),
+        database_uri:
+            process.env.MONGODB_URI || defaultMongoUri,
+        python_command: pythonCommand,
+        max_upload_size_mb: maxUploadSizeMb,
+        prediction_timeout_ms: predictionTimeoutMs
+    });
+});
+
+
+// =========================
+// 🔹 API ROUTES
+// =========================
+app.use("/api/auth", authRoutes);
+
+app.use("/api/scans", scanRoutes);
+
+
+// =========================
+// 🔹 FRONTEND ROUTE
+// =========================
+if (fs.existsSync(frontendDistDir)) {
+
+    app.use(
+        "/app",
+        express.static(frontendDistDir)
+    );
+
+    app.get(/^\/app(?:\/.*)?$/, (req, res) => {
+        res.sendFile(
+            path.join(frontendDistDir, "index.html")
+        );
+    });
+}
+
+
+// =========================
+// 🔹 ERROR HANDLERS
+// =========================
+app.use(notFoundHandler);
+
+app.use(errorHandler);
+
+
+// =========================
+// 🔹 START SERVER
+// =========================
+async function startServer() {
+
+    await connectDatabase();
+
+    app.listen(PORT, () => {
+        console.log(
+            `Server running on http://localhost:${PORT}`
+        );
+    });
+}
+
+startServer().catch((error) => {
+
+    console.error(
+        "Failed to start server:",
+        error.message
+    );
+
+    process.exit(1);
 });

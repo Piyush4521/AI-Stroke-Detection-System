@@ -2,8 +2,9 @@ import os
 import cv2
 import numpy as np
 
-image_root = "dataset/segmentation/train/images"
-mask_root = "dataset/segmentation/train/masks"
+BASE_DIR = os.path.dirname(__file__)
+image_root = os.path.join(BASE_DIR, "dataset", "segmentation", "train", "images")
+mask_root = os.path.join(BASE_DIR, "dataset", "segmentation", "train", "masks")
 
 IMG_SIZE = 128
 

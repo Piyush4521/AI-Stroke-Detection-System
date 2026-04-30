@@ -1,5 +1,12 @@
+import os
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
+
+ai_model_dir = os.path.join(os.path.dirname(__file__), "ai-model")
+if ai_model_dir not in sys.path:
+    sys.path.insert(0, ai_model_dir)
 
 from load_segmentation_data import images, masks
 

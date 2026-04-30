@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 from load_segmentation_data import images, masks
 
+BASE_DIR = os.path.dirname(__file__)
 X = images.reshape(-1, 128, 128, 1)
 y = masks.reshape(-1, 128, 128, 1)
 
@@ -78,7 +79,8 @@ model.fit(
     batch_size=4
 )
 
-os.makedirs("models", exist_ok=True)
-model.save("models/segmentation_model.keras")
+models_dir = os.path.join(BASE_DIR, "models")
+os.makedirs(models_dir, exist_ok=True)
+model.save(os.path.join(models_dir, "segmentation_model.keras"))
 
 print("✅ Segmentation model saved!")

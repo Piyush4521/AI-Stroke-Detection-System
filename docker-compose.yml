@@ -1,0 +1,14 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: ai-stroke-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: ai-stroke-detection-system
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:
