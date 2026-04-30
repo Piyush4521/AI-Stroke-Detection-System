@@ -3,22 +3,17 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 from load_segmentation_data import images, masks
 
-# Load model
 model = load_model("models/segmentation_model.keras")
 
-# Pick random image
 idx = np.random.randint(0, len(images))
 
 img = images[idx]
 true_mask = masks[idx]
 
-# Prepare input
 input_img = img.reshape(1, 128, 128, 1)
 
-# Predict
 pred_mask = model.predict(input_img)[0]
 
-# Plot
 plt.figure(figsize=(12,4))
 
 plt.subplot(1,4,1)

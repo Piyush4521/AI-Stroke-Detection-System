@@ -4,9 +4,6 @@ import numpy as np
 
 IMG_SIZE = 128
 
-# =========================
-# 🔹 LOAD TRAIN DATA
-# =========================
 train_data = []
 train_labels = []
 
@@ -29,15 +26,10 @@ for category in ["Normal", "Stroke"]:
 X_train = np.array(train_data)
 y_train = np.array(train_labels)
 
-# Add channel dimension
 X_train = X_train.reshape(-1, IMG_SIZE, IMG_SIZE, 1)
 
 print("Train shape:", X_train.shape)
 
-
-# =========================
-# 🔹 LOAD VALIDATION DATA
-# =========================
 val_data = []
 val_labels = []
 
@@ -64,10 +56,6 @@ X_val = X_val.reshape(-1, IMG_SIZE, IMG_SIZE, 1)
 
 print("Validation shape:", X_val.shape)
 
-
-# =========================
-# 🔹 BUILD MODEL (CNN)
-# =========================
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 
@@ -89,17 +77,12 @@ model.compile(optimizer='adam',
 
 model.summary()
 
-
-# =========================
-# 🔹 TRAIN MODEL
-# =========================
 history = model.fit(
     X_train, y_train,
     epochs=5,
     batch_size=32,
     validation_data=(X_val, y_val)
 )
-
 
 os.makedirs("models", exist_ok=True)
 model.save("models/classification_model.keras")

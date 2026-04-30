@@ -4,18 +4,13 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 from load_segmentation_data import images, masks
 
-# =========================
-# 🔹 PREPARE DATA
-# =========================
 X = images.reshape(-1, 128, 128, 1)
 y = masks.reshape(-1, 128, 128, 1)
 
 print("X shape:", X.shape)
 print("y shape:", y.shape)
 
-# =========================
-# 🔹 STRONG COMBINED LOSS
-# =========================
+
 def combined_loss(y_true, y_pred):
     bce = tf.keras.losses.binary_crossentropy(y_true, y_pred)
 
@@ -25,17 +20,16 @@ def combined_loss(y_true, y_pred):
         tf.reduce_sum(y_true) + tf.reduce_sum(y_pred) + smooth
     )
 
-    return bce + (1 - dice) * 2   # 🔥 stronger focus on lesion
+    return bce + (1 - dice) * 2
 
-# =========================
-# 🔹 U-NET MODEL
-# =========================
+
 def conv_block(x, filters):
     x = layers.Conv2D(filters, (3,3), padding='same', activation='relu')(x)
     x = layers.BatchNormalization()(x)
     x = layers.Conv2D(filters, (3,3), padding='same', activation='relu')(x)
     x = layers.BatchNormalization()(x)
     return x
+
 
 def build_unet(input_shape=(128,128,1)):
     inputs = layers.Input(input_shape)
@@ -67,6 +61,7 @@ def build_unet(input_shape=(128,128,1)):
 
     return models.Model(inputs, outputs)
 
+
 model = build_unet()
 
 model.compile(
@@ -77,18 +72,12 @@ model.compile(
 
 model.summary()
 
-# =========================
-# 🔹 TRAIN (IMPORTANT SETTINGS)
-# =========================
 model.fit(
     X, y,
-    epochs=25,       # 🔥 more learning
-    batch_size=4     # 🔥 better for small data
+    epochs=25,
+    batch_size=4
 )
 
-# =========================
-# 🔹 SAVE MODEL
-# =========================
 os.makedirs("models", exist_ok=True)
 model.save("models/segmentation_model.keras")
 
